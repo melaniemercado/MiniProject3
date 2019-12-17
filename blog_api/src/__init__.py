@@ -1,6 +1,6 @@
 from flask import Flask
 
-from src.models import db
+from blog_api.src.models import db
 from . import config
 
 

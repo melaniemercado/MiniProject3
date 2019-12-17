@@ -4,6 +4,8 @@ from flask import request
 
 from . import create_app
 from .models import Cats, db
+from .config import app_config
+from flask import Flask
 
 app = create_app()
 
@@ -52,3 +54,25 @@ def edit(cat_id):
     cat_to_update.price = new_price
     db.session.commit()
     return json.dumps("Edited"), 200
+
+
+# src/app.py
+
+def create_app(env_name):
+    """
+    Create app
+    """
+
+    # app initialization
+    app = Flask(__name__)
+
+    app.config.from_object(app_config[env_name])
+
+    @app.route('/', methods=['GET'])
+    def index():
+        """
+        example endpoint
+        """
+        return 'Congratulations! Your first endpoint is workin'
+
+    return app
