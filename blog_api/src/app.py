@@ -1,78 +1,38 @@
-import json
-
-from flask import request
-
-from . import create_app
-from .models import Cats, db
-from .config import app_config
-from flask import Flask
-
-app = create_app()
-
-
-@app.route('/', methods=['GET'])
-def fetch():
-    cats = Cats.query.all()
-    all_cats = []
-    for cat in cats:
-        new_cat = {
-            "id": cat.id,
-            "name": cat.name,
-            "price": cat.price,
-            "breed": cat.breed
-        }
-
-        all_cats.append(new_cat)
-    return json.dumps(all_cats), 200
-
-
-@app.route('/add', methods=['POST'])
-def add():
-    data = request.get_json()
-    name = data['name']
-    price = data['price']
-    breed = data['breed']
-
-    cat = Cats(name=name, price=price, breed=breed)
-    db.session.add(cat)
-    db.session.commit()
-    return json.dumps("Added"), 200
-
-
-@app.route('/remove/<cat_id>', methods=['DELETE'])
-def remove(cat_id):
-    Cats.query.filter_by(id=cat_id).delete()
-    db.session.commit()
-    return json.dumps("Deleted"), 200
-
-
-@app.route('/edit/<cat_id>', methods=['PATCH'])
-def edit(cat_id):
-    data = request.get_json()
-    new_price = data['price']
-    cat_to_update = Cats.query.filter_by(id=cat_id).all()[0]
-    cat_to_update.price = new_price
-    db.session.commit()
-    return json.dumps("Edited"), 200
-
-
 # src/app.py
 
+from flask import Flask
+
+from .config import app_config
+from .models import db, bcrypt
+
+
+# import user_api blueprint
+from .views.UserView import user_api as user_blueprint # add this line
+
+
 def create_app(env_name):
+  """
+  Create app
+  """
+
+  # app initiliazation
+  app = Flask(__name__)
+
+  app.config.from_object(app_config[env_name])
+
+  # initializing bcrypt
+  bcrypt.init_app(app)  # add this line
+
+  db.init_app(app)  # add this line
+
+  app.register_blueprint(user_blueprint, url_prefix='/api/v1/users')  # add this line
+
+
+  @app.route('/', methods=['GET'])
+  def index():
     """
-    Create app
+    example endpoint
     """
+    return 'Congratulations! Your part 2 endpoint is working'
 
-    # app initialization
-    app = Flask(__name__)
-
-    app.config.from_object(app_config[env_name])
-
-    @app.route('/', methods=['GET'])
-    def index():
-        """
-        example endpoint
-        """
-        return 'Congratulations! Your first endpoint is workin'
-
-    return app
+  return app
